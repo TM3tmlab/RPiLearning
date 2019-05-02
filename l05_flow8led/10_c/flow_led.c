@@ -1,5 +1,11 @@
 #include <wiringPi.h>
 #include <stdio.h>
+#include <signal.h>
+
+volatile sig_atomic_t eflag = 0;
+void intrruptHandler(int signum) {
+  eflag = 1;
+}
 
 // for flow delay time(msec)
 #define DELAY_TIME 66
@@ -27,6 +33,10 @@ int main(void) {
     printf("Setup wiringPi Faild!");
     return -1;
   }
+  if (signal(SIGINT, intrruptHandler) == SIG_ERR) {
+    printf("Failed regist handler\n");
+    return -2;
+  }
 
   setUp();
 
@@ -36,7 +46,7 @@ int main(void) {
   printf("|  LEDs will flow blinking  |\n");
   printf("|***************************|\n");
 
-  while(1) {
+  while(!eflag) {
     for (int i = 0; i < 8; i+= 1) {
       turnOn(i);
       delay(DELAY_TIME);
